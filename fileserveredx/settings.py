@@ -1,5 +1,6 @@
 # Django settings for fileserveredx project.
 from localfs import memcache
+from sendfile import sendfile
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -180,3 +181,8 @@ DATABASES = {
             "USER": "edxapp001"
         }}
 
+
+#SETTINGS for Send File
+SENDFILE_BACKEND = 'sendfile.backends.development'
+SENDFILE_ROOT = '/edx/files'
+SENDFILE_URL = '/protected'
