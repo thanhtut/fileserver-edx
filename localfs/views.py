@@ -39,11 +39,16 @@ def index(request):
     #sessionkey = request.session.session_key
     #keys=request.session.keys()
     #response = HttpResponse("Hello, world. You're at the files index." )
-    return sendfile(request, '/edx/files/user/kappa.jpg')
+    return HttpResponse("This simple file server with authentication. There is nothing useful here on its index page.")
 
 def public(request,path):
-    print path
-    return sendfile(request, '/edx/files/user/kappa.jpg')
+    fileroot = settings.SENDFILE_ROOT
+    filename = os.path.join(fileroot, 'public',path)
+    if os.path.isfile(filename):
+        return sendfile(request, filename)
+    else:
+        return HttpResponseNotFound('<h1>File not found</h1>')
+
 
 @registered_user_required
 def user(request,path):
@@ -57,5 +62,11 @@ def user(request,path):
 
 @staff_required
 def staff(request,path):
-    return sendfile(request, '/edx/files/user/kappa.jpg')
+    fileroot = settings.SENDFILE_ROOT
+    filename = os.path.join(fileroot, 'staff',path)
+
+    if os.path.isfile(filename):
+        return sendfile(request, filename)
+    else:
+        return HttpResponseNotFound('<h1>File not found</h1>')
 
