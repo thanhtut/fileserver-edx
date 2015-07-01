@@ -19,6 +19,18 @@ For testing add the following items to /etc/hosts (for Linux). For real deployme
 	192.168.33.20   edxlocal
 	192.168.33.20   studio.edxlocal
 
+###Patching edx-platform
+It requires new storage class to the LMS models. It has to be done here " edx-platform/lms/djangoapps/instructor_task/models.py". 
+
+The settings for storage options has to be updated as well. The places to update is "edx-platform/lms/envs/common.py"
+
+are "edx-platform/csm/envs/bok_choy.eng.json" and "edx-platform/lms/envs/bok_choy.py"
+    "GRADES_DOWNLOAD": {
+	"BUCKET": "edx-grades",
+        "ROOT_PATH": "/tmp/edx-s3/grades",
+        "STORAGE_TYPE": "localfs"
+    },
+
 
 ## Access Control
 It allows three level of access control. The first one is public access. After that there is authenticated users access which is accessible to anyone logged in into the edX. Third one is staff only which is accessible only to the users designated as staff such as lecturers and admin staff.
