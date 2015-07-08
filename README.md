@@ -122,6 +122,46 @@ Finally the nginx configuration for the forum that connects to a socket contains
 	}
 
 
-The fileserveredx app will also work in the similar fashion. Add nginx configuratin for fileserver in "/edx/app/nginx/sites-available/fileserver"
+The fileserveredx app will also work in the similar fashion. Add nginx configuratin for fileserver in "/edx/app/nginx/sites-available/fileserver".
+
+Activate the virtual enviroment and install after that run gunicorn test by entering
+	gunicorn fileserveredx.wsgi:application --bind unix:/edx/var/fileserver/fileserver.sock -w4
+Then create a file named fileserver in /edx/app/nginx/site-available/fileserver with the following content
+
+	upstream fileserver {
+	  server unix:/edx/var/fileserver/fileserver.sock fail_timeout=0;
+	}
+	
+	server {
+	
+	  listen 80 ;
+	
+	  server_name files.*;
+	#  server_name ~^((stage|prod)-)?files.*;
 	
 	
+	  location / {
+	    try_files $uri @proxy_to_app;
+	  }
+	
+	
+	location @proxy_to_app {
+	        proxy_set_header X-Forwarded-Proto $scheme;
+	    proxy_set_header X-Forwarded-Port $server_port;
+	    proxy_set_header X-Forwarded-For $remote_addr;
+	        proxy_set_header Host $http_host;
+	
+	    proxy_redirect off;
+	    proxy_pass http://fileserver;
+	  }
+	}
+
+	
+After that create a symbolic link to enable the site
+
+	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
+	
+And restart nginx.
+
+Now fileserver should be running at files.[yourhostname]
+
