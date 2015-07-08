@@ -89,6 +89,37 @@ The gunicorn config for forum contains
 	  ::Mongoid.default_session.disconnect
 	end
 	
+	
+	
+Finally the nginx configuration for the forum that connects to a socket contains
+	upstream forum_app_server {
+	  server unix:/edx/var/forum/forum.sock fail_timeout=0;
+	}
+	
+	server {
+	
+	  server_name forum.*;
+	  listen 18080 ;
+	  client_max_body_size 1M;
+	  keepalive_timeout 5;
+	
+	  location / {
+	    try_files $uri @proxy_to_app;
+	  }
+	
+	
+	location @proxy_to_app {
+	        proxy_set_header X-Forwarded-Proto $scheme;
+	    proxy_set_header X-Forwarded-Port $server_port;
+	    proxy_set_header X-Forwarded-For $remote_addr;
+	        proxy_set_header Host $http_host;
+	
+	    proxy_redirect off;
+	    proxy_pass http://forum_app_server;
+	  }
+	}
+
+
 The fileserveredx app will also work in the similar fashion.
 
 
