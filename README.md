@@ -77,6 +77,7 @@ The file /edx/app/forum/forum-supervisor.sh contailns the following scripts that
 	/edx/app/forum/.gem/bin/unicorn -c config/unicorn.rb
 	
 The gunicorn config for forum contains
+
 	require 'tmpdir'
 	worker_processes Integer(ENV['WORKER_PROCESSES'] || 4)
 	timeout 25
@@ -92,6 +93,7 @@ The gunicorn config for forum contains
 	
 	
 Finally the nginx configuration for the forum that connects to a socket contains
+
 	upstream forum_app_server {
 	  server unix:/edx/var/forum/forum.sock fail_timeout=0;
 	}
@@ -120,7 +122,6 @@ Finally the nginx configuration for the forum that connects to a socket contains
 	}
 
 
-The fileserveredx app will also work in the similar fashion.
-
-
-
+The fileserveredx app will also work in the similar fashion. Add nginx configuratin for fileserver in "/edx/app/nginx/sites-available/fileserver"
+	
+	
