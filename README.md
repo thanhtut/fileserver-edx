@@ -58,6 +58,7 @@ The supervisor files includes all the config files under "/edx/app/supervisor/co
 - xqueue.conf
 
 Forum.conf contains the following content
+
 	[program:forum]
 	command=/edx/app/forum/forum-supervisor.sh
 	priority=999
