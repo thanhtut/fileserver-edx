@@ -33,11 +33,73 @@ The settings for storage options has to be updated as well. The places to update
 Make sure the folder value for "ROOT_PATH" has the write permisson for the user www-data.
 
 
-## Access Control
-It allows three level of access control. The first one is public access. After that there is authenticated users access which is accessible to anyone logged in into the edX. Third one is staff only which is accessible only to the users designated as staff such as lecturers and admin staff.
 
 ##Deploying fileserver edx.
-Deploying the fileserver can be done in the same way as edX handles deployment of apps such as forum. The deployment makes use of gunicorn and nginx. The management of the gunicorn processes for the application can be achieved using supervisor.
+
+Deploying the fileserver can be done in the same way as edX handles deployment of apps such as forum. The deployment makes use of gunicorn and nginx. The management of the gunicorn processes for the application can be achieved using supervisor. Deployment can be done in the following steps
+
++ Check out fileserveredx.
++ Configuring nginx
++ Configuring supervisor
+
+### 1. Checking out file server
+Get the fileserver code by checking out edx repository.
+
+	git clone https://github.com/thanhtut/fileserveredx.git
+	
+Moved the checked out diretory to "/edx/app/edxapp/fileserver/". And copy the ./edx_patch/instructor_task/models.py file to /edx/app/edxapp/edx-platform/lms/djangoapps/instructor_task/models.py
+
+### 2. Configuring nginx
+
+Make sure all that necessary hosts file or DNS is configured to redirect "files.[example site].org" to your server. After that copy "config_files/fileserver" to "/edx/app/nginx/sites-available/fileserver". After that create a symbolic to nginx site enabled folder. It can be done as follows. 
+
+	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
+	chown www-data:www-data /etc/nginx/sites-enabled/fileserver
+	
+After that restart nginx.
+
+#### 3. Configuring supervisor and gunicorn
+
+	
+Then create a file named fileserver in /edx/app/nginx/site-available/fileserver with the following content
+
+	upstream fileserver {
+	  server unix:/edx/var/fileserver/fileserver.sock fail_timeout=0;
+	}
+	
+	server {
+	
+	  listen 80 ;
+	
+	  server_name files.*;
+	#  server_name ~^((stage|prod)-)?files.*;
+	
+	
+	  location / {
+	    try_files $uri @proxy_to_app;
+	  }
+	
+	
+	location @proxy_to_app {
+	        proxy_set_header X-Forwarded-Proto $scheme;
+	    proxy_set_header X-Forwarded-Port $server_port;
+	    proxy_set_header X-Forwarded-For $remote_addr;
+	        proxy_set_header Host $http_host;
+	
+	    proxy_redirect off;
+	    proxy_pass http://fileserver;
+	  }
+	}
+
+	
+After that create a symbolic link to enable the site
+
+	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
+	
+And restart nginx.
+
+Now fileserver should be running at files.[yourhostname]
+
 
 edX supervisor script is as follows 
 	sudo -u www-data /edx/app/supervisor/venvs/supervisor/bin/supervisorctl -c /edx/app/supervisor/supervisord.conf $*
@@ -127,42 +189,6 @@ The fileserveredx app will also work in the similar fashion. Add nginx configura
 
 Activate the virtual enviroment and install after that run gunicorn test by entering
 	gunicorn fileserveredx.wsgi:application --bind unix:/edx/var/fileserver/fileserver.sock -w4
-Then create a file named fileserver in /edx/app/nginx/site-available/fileserver with the following content
 
-	upstream fileserver {
-	  server unix:/edx/var/fileserver/fileserver.sock fail_timeout=0;
-	}
-	
-	server {
-	
-	  listen 80 ;
-	
-	  server_name files.*;
-	#  server_name ~^((stage|prod)-)?files.*;
-	
-	
-	  location / {
-	    try_files $uri @proxy_to_app;
-	  }
-	
-	
-	location @proxy_to_app {
-	        proxy_set_header X-Forwarded-Proto $scheme;
-	    proxy_set_header X-Forwarded-Port $server_port;
-	    proxy_set_header X-Forwarded-For $remote_addr;
-	        proxy_set_header Host $http_host;
-	
-	    proxy_redirect off;
-	    proxy_pass http://fileserver;
-	  }
-	}
-
-	
-After that create a symbolic link to enable the site
-
-	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
-	
-And restart nginx.
-
-Now fileserver should be running at files.[yourhostname]
-
+## Access Control
+It allows three level of access control. The first one is public access. After that there is authenticated users access which is accessible to anyone logged in into the edX. Third one is staff only which is accessible only to the users designated as staff such as lecturers and admin staff.
