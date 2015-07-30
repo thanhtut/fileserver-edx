@@ -8,6 +8,25 @@ In order to use session sharing make the following changes and restart edX LMS a
 
 Changes required
 1. Make CMS run on port 80. Edit /edx/app/nginx/sites-enabled/cms and change "listen 10180 to listen 80". Run "sudo service nginx restart".
+2. 
+Session sharing can de done by simply changing the SESSION_COOKIE_DOMAIN configuration in the following places  
+
+    /edx/app/edxapp/lms.env.json 
+
+    /edx/app/edxapp/cms.env.json 
+
+ 
+
+Make sure that the SESSION_COOKIE_NAME is the same for both configurations. (If it's already the same it doesn't have to be changed) 
+
+"SESSION_COOKIE_DOMAIN": ".edxlocal.com",  "SESSION_COOKIE_NAME": "sessionid", 
+
+For example, studio.asianux.academy and asianux.academy. The session cookie domain will be ".asianux.academy" 
+
+In order to make sure it works with other extension of ours, add the "SESSION_ENGINE" configuration line at the end of the configuration file 
+
+"ZENDESK_URL": "",  "SESSION_ENGINE": "django.contrib.sessions.backends.cached_db" }  
+
 
 ### Sample setup
 * LMS: edxlocal
