@@ -59,14 +59,16 @@ def user(request,path):
     else:
         return HttpResponseNotFound('<h1>File not found</h1>')
 
-
-@staff_required
 def staff(request,path):
     fileroot = settings.SENDFILE_ROOT
     filename = os.path.join(fileroot, 'staff',path)
+    #nginx backend do not require /staff path to be included
+    if (settings.SENDFILE_BACKEND == 'sendfile.backends.nginx'):
+        #Remove nginx-protected from path
+        #nginx_path = path.replace("nginx-protected/","")
+        filename = os.path.join(fileroot,  urllib.quote(path))
 
     if os.path.isfile(filename):
         return sendfile(request, filename)
     else:
-        return HttpResponseNotFound('<h1>File not found</h1>')
-
+        return HttpResponseNotFound('<h1>File not found</h1>'+filename +path)

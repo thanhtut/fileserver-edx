@@ -186,3 +186,10 @@ DATABASES = {
 SENDFILE_BACKEND = 'sendfile.backends.development'
 SENDFILE_ROOT = '/edx/files'
 SENDFILE_URL = '/protected'
+
+### ENABLE LAST THREE LINES AND COMMENT OUT THE PREVOUS THREE TO USE NGINX BACKEnD ###
+#SETTINGS for Send File
+#SENDFILE_BACKEND = 'sendfile.backends.nginx'
+#SENDFILE_ROOT = '/edx/files/staff/'
+#SENDFILE_URL = '/staff'
+
