@@ -27,7 +27,8 @@ Changes required
  
 Make sure that the SESSION_COOKIE_NAME is the same for both configurations. (If it's already the same it doesn't have to be changed) 
 
-"SESSION_COOKIE_DOMAIN": ".edxlocal.com",  "SESSION_COOKIE_NAME": "sessionid", 
+    "SESSION_COOKIE_DOMAIN": ".edxlocal.com",  
+    "SESSION_COOKIE_NAME": "sessionid", 
 
 For example, studio.asianux.academy and asianux.academy. The session cookie domain will be ".asianux.academy" 
 
