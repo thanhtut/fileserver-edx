@@ -1,22 +1,30 @@
 # fileserver-edx
-Simple authenticated file server for edX that checks the athentication sessions of the user before serving the file. Written in python. It uses django-sendfile package https://github.com/johnsensible/django-sendfile. This sendfile package allows efficent sending of large files via Apache X-Sendfile or Nginx X-Accel-Redirect. To install the package, activate virtualenv for the project if you use and run "pip install django-senfile"
+Simple authenticated file server for edX that checks the athentication sessions of the user before serving the file. Written in python. It uses django-sendfile package https://github.com/johnsensible/django-sendfile. This sendfile package allows efficent sending of large files via Apache X-Sendfile or Nginx X-Accel-Redirect. To install the package, activate virtualenv for the project if you use and run "pip install django-sendfile"
+
+##Installing django-sendfile
+It can be done simply by activating the virtual environment to use and running pip install
+    sudo su edxapp -s /bin/bash
+    cd ~
+    source edxapp_env
+    pip install dango-sendfile
+    exit
 
 ## Configuring edX
-This file server checks for the required authentication levels for edX by means of session sharing among Django frameworks. However, edX LMS and CMS are not configured with session sharing when they are installed. We have to configure them to do so. 
+###Enabling session sharing
+
+This file server checks for the required authentication levels for edX by means of session sharing among Django applications. However, edX LMS and CMS are not configured with session sharing when they are installed. We have to configure them to do so. 
 
 In order to use session sharing make the following changes and restart edX LMS and CMS.
 
 Changes required
 1. Make CMS run on port 80. Edit /edx/app/nginx/sites-enabled/cms and change "listen 10180 to listen 80". Run "sudo service nginx restart".
-2. 
-Session sharing can de done by simply changing the SESSION_COOKIE_DOMAIN configuration in the following places  
+2. Session sharing can de done by simply changing the SESSION_COOKIE_DOMAIN configuration in the following places  
 
     /edx/app/edxapp/lms.env.json 
 
     /edx/app/edxapp/cms.env.json 
 
  
-
 Make sure that the SESSION_COOKIE_NAME is the same for both configurations. (If it's already the same it doesn't have to be changed) 
 
 "SESSION_COOKIE_DOMAIN": ".edxlocal.com",  "SESSION_COOKIE_NAME": "sessionid", 
@@ -28,14 +36,15 @@ In order to make sure it works with other extension of ours, add the "SESSION_EN
 "ZENDESK_URL": "",  "SESSION_ENGINE": "django.contrib.sessions.backends.cached_db" }  
 
 
-### Sample setup
+### Sample setup (not necessary for live system. Add DNS record instead)
 * LMS: edxlocal
 * CMS: studio.edxlocal
 * fileserver-edx: filesecure.edxlocal
 
-####Set up virtual hosts 
+####Set up virtual hosts (not necessary for live system. Add DNS record instead)
 For testing add the following items to /etc/hosts (for Linux). For real deployment chang DNS settings.
 	192.168.33.20   edxlocal
+	192.168.33.20   studio.edxlocal
 	192.168.33.20   studio.edxlocal
 
 ###Patching edx-platform
@@ -51,11 +60,9 @@ The settings for storage options has to be updated as well. The places to update
     },
 Make sure the folder value for "ROOT_PATH" has the write permisson for the user www-data.
 
-
-
 ##Deploying fileserver edx.
 
-Deploying the fileserver can be done in the same way as edX handles deployment of apps such as forum. The deployment makes use of gunicorn and nginx. The management of the gunicorn processes for the application can be achieved using supervisor. Deployment can be done in the following steps
+Deploying the fileserver can be done in the same way as edX handles deployment of apps such as forum. The deployment makes use of gunicorn and nginx. The management of the gunicorn WSGI processes for the application can be achieved using supervisor. Deployment can be done in the following steps
 
 + Check out fileserveredx.
 + Configuring nginx
@@ -65,17 +72,8 @@ Deploying the fileserver can be done in the same way as edX handles deployment o
 Get the fileserver code by checking out edx repository.
 
 	git clone https://github.com/thanhtut/fileserveredx.git
-	
-Moved the checked out diretory to "/edx/app/edxapp/fileserver/". And copy the ./edx_patch/instructor_task/models.py file to /edx/app/edxapp/edx-platform/lms/djangoapps/instructor_task/models.py
-
-### 2. Configuring nginx
-
-Make sure all that necessary hosts file or DNS is configured to redirect "files.[example site].org" to your server. After that copy "config_files/fileserver" to "/edx/app/nginx/sites-available/fileserver". After that create a symbolic to nginx site enabled folder. It can be done as follows. 
-
-	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
-	chown www-data:www-data /etc/nginx/sites-enabled/fileserver
-	
-After that restart nginx.
+### 2. Adding fileserveredx and patch to edx 
+Moved all the contents checked out diretory to "/edx/app/edxapp/fileserver/". And copy the ./edx_patch/instructor_task/models.py file to /edx/app/edxapp/edx-platform/lms/djangoapps/instructor_task/models.py
 
 #### 3. Configuring supervisor and gunicorn
 
@@ -115,10 +113,31 @@ After that create a symbolic link to enable the site
 
 	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
 	
+### 3. Configuring nginx
+
+Make sure all that necessary hosts file or DNS is configured to redirect "files.[example site].org" to your server. After that copy "config_files/fileserver" to "/edx/app/nginx/sites-available/fileserver". After that create a symbolic to nginx site enabled folder. It can be done as follows. 
+
+	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
+	chown www-data:www-data /etc/nginx/sites-enabled/fileserver
+	
+After that restart nginx.
+
+
 And restart nginx.
 
 Now fileserver should be running at files.[yourhostname]
 
+
+## Access Control
+It allows three level of access control. The first one is public access. After that there is authenticated users access which is accessible to anyone logged in into the edX. Third one is staff only which is accessible only to the users designated as staff such as lecturers and admin staff.
+
+
+
+
+
+
+
+#Giberish Warning I will remove them later
 
 edX supervisor script is as follows 
 	sudo -u www-data /edx/app/supervisor/venvs/supervisor/bin/supervisorctl -c /edx/app/supervisor/supervisord.conf $*
@@ -209,5 +228,3 @@ The fileserveredx app will also work in the similar fashion. Add nginx configura
 Activate the virtual enviroment and install after that run gunicorn test by entering
 	gunicorn fileserveredx.wsgi:application --bind unix:/edx/var/fileserver/fileserver.sock -w4
 
-## Access Control
-It allows three level of access control. The first one is public access. After that there is authenticated users access which is accessible to anyone logged in into the edX. Third one is staff only which is accessible only to the users designated as staff such as lecturers and admin staff.
