@@ -7,6 +7,7 @@ import importlib
 from django.contrib.auth.models import User
 from sendfile import sendfile
 import os.path
+import urllib
 
 def registered_user_required(a_view):
     def _wrapped_view(request, *args, **kwargs):
@@ -66,7 +67,7 @@ def staff(request,path):
     if (settings.SENDFILE_BACKEND == 'sendfile.backends.nginx'):
         #Remove nginx-protected from path
         #nginx_path = path.replace("nginx-protected/","")
-        filename = os.path.join(fileroot,  urllib.quote(path))
+        filename = os.path.join(fileroot,  urllib.quote(path).replace('%252F','%2F'))
 
     if os.path.isfile(filename):
         return sendfile(request, filename)

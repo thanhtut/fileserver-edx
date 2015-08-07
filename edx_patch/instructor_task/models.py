@@ -509,6 +509,6 @@ class SimpleFileServerReportStore(ReportStore):
         files.sort(key=lambda (filename, full_path): os.path.getmtime(full_path), reverse=True)
 
         return [
-            (filename, (self.root_url + 'staff/' + course_path + '/' + filename))
+            (filename, (self.root_url + 'staff/' + course_path.replace('%2F','%252F') + '/' + filename))
             for filename, full_path in files
         ]
