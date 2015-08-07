@@ -33,7 +33,9 @@ For example, studio.asianux.academy and asianux.academy. The session cookie doma
 
 In order to make sure it works with other extension of ours, add the "SESSION_ENGINE" configuration line at the end of the configuration file 
 
-"ZENDESK_URL": "",  "SESSION_ENGINE": "django.contrib.sessions.backends.cached_db" }  
+    "ZENDESK_URL": "",
+    "SESSION_ENGINE": "django.contrib.sessions.backends.cached_db" 
+    }  
 
 
 ### Sample setup (not necessary for live system. Add DNS record instead)
@@ -71,63 +73,48 @@ Deploying the fileserver can be done in the same way as edX handles deployment o
 ### 1. Checking out file server
 Get the fileserver code by checking out edx repository.
 
-	git clone https://github.com/thanhtut/fileserveredx.git
+    git clone https://github.com/thanhtut/fileserveredx.git
+	
+
 ### 2. Adding fileserveredx and patch to edx 
 Moved all the contents checked out diretory to "/edx/app/edxapp/fileserver/". And copy the ./edx_patch/instructor_task/models.py file to /edx/app/edxapp/edx-platform/lms/djangoapps/instructor_task/models.py
 
-#### 3. Configuring supervisor and gunicorn
+### 3. Creating required folders
+The file server require two folders to be crated. The first one is the folder for filestorage and the second one is the folder for gunicorn socket. 
 
-	
-Then create a file named fileserver in /edx/app/nginx/site-available/fileserver with the following content
+    sudo mkdir /edx/files
+    sudo mkdir /edx/files/staff
+    sudo chown -R www-data:www-data /edx/files
+    sudo mkdir /edx/var/fileserver
+    sudo chown -R www-data:www-data /edx/var/fileserver
+    
+    
 
-	upstream fileserver {
-	  server unix:/edx/var/fileserver/fileserver.sock fail_timeout=0;
-	}
-	
-	server {
-	
-	  listen 80 ;
-	
-	  server_name files.*;
-	#  server_name ~^((stage|prod)-)?files.*;
-	
-	
-	  location / {
-	    try_files $uri @proxy_to_app;
-	  }
-	
-	
-	location @proxy_to_app {
-	        proxy_set_header X-Forwarded-Proto $scheme;
-	    proxy_set_header X-Forwarded-Port $server_port;
-	    proxy_set_header X-Forwarded-For $remote_addr;
-	        proxy_set_header Host $http_host;
-	
-	    proxy_redirect off;
-	    proxy_pass http://fileserver;
-	  }
-	}
+### 4. Configuring supervisor 
+By adding a supervisor configuration file we can launch our fileserver or restart it in a similar way to how edx apps can be restarted. Do the follwing in order to add supervisor script for file server\
 
-	
-After that create a symbolic link to enable the site
+    cd ~/fileserveredx
+    sudo cp ./config_files/supervisor/fileserver.conf /edx/app/supervisor/conf.d/
+    sudo chown -R supervisor:www-data /edx/app/supervisor/conf.d/fileserver.conf
+    sudo service supervisor restart
+    
+After that you can run the following command to start fileserver
 
-	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
-	
-### 3. Configuring nginx
+    sudo /edx/bin/supervisorctl restart fileserver
+    sudo /edx/bin/supervisorctl status 
+    
+### 5. Configuring nginx 
+After supervisor has been configured, the fileserver application will be listening for connections at at unix socket at /edx/var/fileserver/fileserver.sock. Next step is to make it available through nginx. 
 
 Make sure all that necessary hosts file or DNS is configured to redirect "files.[example site].org" to your server. After that copy "config_files/fileserver" to "/edx/app/nginx/sites-available/fileserver". After that create a symbolic to nginx site enabled folder. It can be done as follows. 
 
-	sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
-	chown www-data:www-data /etc/nginx/sites-enabled/fileserver
+
+     sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
+     chown www-data:www-data /etc/nginx/sites-enabled/fileserver
+     sudo service nginx restart
+
+Try creating a report and download the files.
 	
-After that restart nginx.
-
-
-And restart nginx.
-
-Now fileserver should be running at files.[yourhostname]
-
-
 ## Access Control
 It allows three level of access control. The first one is public access. After that there is authenticated users access which is accessible to anyone logged in into the edX. Third one is staff only which is accessible only to the users designated as staff such as lecturers and admin staff.
 
