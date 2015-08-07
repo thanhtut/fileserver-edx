@@ -125,7 +125,7 @@ It allows three level of access control. The first one is public access. After t
 
 
 
-#Giberish Warning I will remove them later
+### xxxxxxxxx Giberish Warning I will remove them later
 
 edX supervisor script is as follows 
 	sudo -u www-data /edx/app/supervisor/venvs/supervisor/bin/supervisorctl -c /edx/app/supervisor/supervisord.conf $*
