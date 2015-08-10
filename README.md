@@ -3,10 +3,11 @@ Simple authenticated file server for edX that checks the athentication sessions 
 
 ##Installing django-sendfile
 It can be done simply by activating the virtual environment to use and running pip install
+
     sudo su edxapp -s /bin/bash
     cd ~
     source edxapp_env
-    pip install dango-sendfile
+    pip install django-sendfile
     exit
 
 ## Configuring edX
