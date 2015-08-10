@@ -81,6 +81,10 @@ Get the fileserver code by checking out edx repository.
 ### 2. Adding fileserveredx and patch to edx 
 Moved all the contents checked out diretory to "/edx/app/edxapp/fileserver/". And copy the ./edx_patch/instructor_task/models.py file to /edx/app/edxapp/edx-platform/lms/djangoapps/instructor_task/models.py
 
+    sudo cp edx_patch/instructor_task/models.py /edx/app/edxapp/edx-platform/lms/djangoapps/instructor_task/models.py
+    sudo mkdir /edx/app/edxapp/fileserver
+    sudo chown -R edxapp:edxapp /edx/app/edxapp/fileserver
+
 ### 3. Creating required folders
 The file server require two folders to be crated. The first one is the folder for filestorage and the second one is the folder for gunicorn socket. 
 
@@ -110,10 +114,15 @@ After supervisor has been configured, the fileserver application will be listeni
 
 Make sure all that necessary hosts file or DNS is configured to redirect "files.[example site].org" to your server. After that copy "config_files/fileserver" to "/edx/app/nginx/sites-available/fileserver". After that create a symbolic to nginx site enabled folder. It can be done as follows. 
 
-
+     sudo cp ~/fileserveredx/config_files/nginx/fileserver /edx/app/nginx/sites-available/fileserver
      sudo ln -s /edx/app/nginx/sites-available/fileserver /etc/nginx/sites-enabled/fileserver
-     chown www-data:www-data /etc/nginx/sites-enabled/fileserver
+     sudo chown www-data:www-data /etc/nginx/sites-enabled/fileserver
      sudo service nginx restart
+
+Restart edxapps
+
+    sudo /edx/bin/supervisorctl restart edxapp:
+    sudo /edx/bin/supervisorctl restart edxapp_worker:
 
 Try creating a report and download the files.
 	
